@@ -10,6 +10,7 @@ for (let i = 0; i < height; i++) {
 }
 
 var myPacs = [];
+var enemyPacs = [];
 var pellets = [];
 
 // game loop
@@ -32,8 +33,16 @@ while (true) {
         if( mine ) {
             myPacs.push( {
                 id: pacId,
-                x, y
+                x, y,
+                hist: []
             });
+        }
+        else {
+            enemyPacs.push( {
+                id: pacId,
+                x, y,
+                hist: []
+            } );
         }
     }
     const visiblePelletCount = parseInt(readline()); // all pellets in sight
@@ -45,16 +54,22 @@ while (true) {
         pellets.push( { x, y, value } );
     }
 
-    myPacs.forEach( x => {
+    let commands = myPacs.map( x => {
         let pt = findClosestPellet( x );
         let st = findClosestSuperPellet( x );
+        let gX = 0, gY = 0;
         if( st.dist < pt.dist + 5 * 5 ) {
-            console.log( `MOVE ${x.id} ${st.x} ${st.y}` );
+            gX = st.x;
+            gY = st.y;
         }
         else {
-            console.log( `MOVE ${x.id} ${pt.x} ${pt.y}` );
+            gX = pt.x;
+            gY = pt.y;
         }
+        x.hist.push( { x: gX, y: gY } );
+        return `MOVE ${x.id} ${gX} ${gY}`;
     });
+    console.log( commands.join( "|" ) );
 
     // Write an action using console.log()
     // To debug: console.error('Debug messages...');
@@ -63,10 +78,18 @@ while (true) {
 
 }
 
-function findClosestPellet( pac ) {
+function findClosestPellet( pac, ignorePelletsAroundEnemies = true ) {
     var closest = 1000 * 1000;
     var cX = 0, cY = 0;
-    pellets.forEach( p => {
+    pellets.filter( p => {
+        let isPelletNearEnemy = false;
+        enemyPacs.forEach( e => {
+            if( Math.abs( p.x - e.x ) < 2 || Math.abs( p.y - e.y ) < 2 ) {
+                isPelletNearEnemy = true;
+            }
+        } );
+        return isPelletNearEnemy;
+    }).forEach( p => {
         var distSq = ( pac.x - p.x ) * ( pac.x - p.x ) + ( pac.y - p.y ) * ( pac.y - p.y );
         if( distSq < closest ) {
             closest = distSq;
