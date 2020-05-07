@@ -47,8 +47,13 @@ while (true) {
 
     myPacs.forEach( x => {
         let pt = findClosestPellet( x );
-        console.error( x, pt.x, pt.y );
-        console.log( `MOVE ${x.id} ${pt.x} ${pt.y}` );
+        let st = findClosestSuperPellet( x );
+        if( st.dist < pt.dist + 5 * 5 ) {
+            console.log( `MOVE ${x.id} ${st.x} ${st.y}` );
+        }
+        else {
+            console.log( `MOVE ${x.id} ${pt.x} ${pt.y}` );
+        }
     });
 
     // Write an action using console.log()
@@ -69,5 +74,19 @@ function findClosestPellet( pac ) {
             cY = p.y;
         }
     } );
-    return { x: cX, y: cY };
+    return { x: cX, y: cY, dist: closest };
+}
+
+function findClosestSuperPellet( pac ) {
+    var closest = 1000 * 1000;
+    var cX = 0, cY = 0;
+    pellets.filter( p => p.value > 1 ).forEach( p => {
+        var distSq = ( pac.x - p.x ) * ( pac.x - p.x ) + ( pac.y - p.y ) * ( pac.y - p.y );
+        if( distSq < closest ) {
+            closest = distSq;
+            cX = p.x;
+            cY = p.y;
+        }
+    } );
+    return { x: cX, y: cY, dist: closest };
 }
